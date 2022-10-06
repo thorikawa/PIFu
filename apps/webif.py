@@ -106,6 +106,7 @@ class Evaluator:
                 gen_mesh_color(opt, self.netG, self.netC, self.cuda, data, save_path, use_octree=use_octree)
             else:
                 gen_mesh(opt, self.netG, self.cuda, data, save_path, use_octree=use_octree)
+        return save_path
 
 @get('/upload')
 def upload():
@@ -135,11 +136,15 @@ def do_upload():
     try:
         print(save_path)
         data = evaluator.load_image(save_path)
-        evaluator.eval(data, True)
+        output_path = evaluator.eval(data, True)
     except Exception as e:
        print("error:", e.args)
     
-    return "success"
+    with open(output_path, 'rb') as fh:
+        content = fh.read()
+    response.content_type = 'application/octet-stream'
+    response.set_header('Content-Length', str(len(content)))
+    return content
 
 def main():
     global evaluator
